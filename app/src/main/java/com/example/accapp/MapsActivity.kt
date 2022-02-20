@@ -33,7 +33,9 @@ import android.widget.*
 import androidx.annotation.NonNull
 import com.google.android.gms.location.LocationRequest
 import android.os.Looper
+import android.util.Log
 import com.google.android.gms.location.LocationCallback
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.maps.android.SphericalUtil
 
@@ -44,15 +46,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     lateinit var inputBar: EditText
     lateinit var reportMap: Button
     lateinit var mGps: ImageView
-
-
     private lateinit var db: FirebaseFirestore
+    private lateinit var mAuth: FirebaseAuth
+    lateinit var locateArray: ArrayList<LatLng>
+
+
     private val mLocationPermissionsGranted = false
 
     private lateinit var lastLocation: Location
     companion object {
         const val LOCATION_REQUEST_CODE = 1
         private const val DEFAULT_ZOOM = 15f
+        const val TAG = "TEST_TAG"
     }
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     lateinit var locationRequest:LocationRequest
@@ -66,6 +71,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         inputBar = findViewById(R.id.inputBar)
         mGps = findViewById(R.id.mylocate)
         reportMap = findViewById(R.id.reportMap)
+
+        db = FirebaseFirestore.getInstance()
+        mAuth = FirebaseAuth.getInstance()
 
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
@@ -85,6 +93,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        db.collection("Report").get().addOnSuccessListener{ result ->
+            for (document in result) {
+                val locate = document.data.getValue("Location")
+
+                val dateTime = document.data["date"]
+                Log.d(TAG, "${document.id} => $locate")
+
+            }
+        }
+            .addOnFailureListener { exception ->
+                Log.d(TAG, "Error getting documents: ", exception)
+            }
+
 
     }
 
@@ -97,8 +118,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
     }
-
-
 
 
     private fun setUpMap() {

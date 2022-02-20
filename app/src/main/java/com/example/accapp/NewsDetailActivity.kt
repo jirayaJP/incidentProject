@@ -43,7 +43,7 @@ class NewsDetailActivity : AppCompatActivity() {
 
         db.collection("Report").get().addOnSuccessListener{ result ->
             for (document in result) {
-                Log.d(TAG, "${document.id} => ${document.data}")
+                //Log.d(TAG, "${document.id} => ${document.data}")
 
 
             }

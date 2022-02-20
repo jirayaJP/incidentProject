@@ -45,7 +45,7 @@ class NextActivity1 : AppCompatActivity() {
         }
 
         news!!.setOnClickListener{
-            val intent = Intent(this,NewsDetailActivity::class.java)
+            val intent = Intent(this,NewsActivity::class.java)
             startActivity(intent)
         }
 

@@ -2,9 +2,7 @@ package com.example.accapp
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.Dialog
-import android.app.ProgressDialog
+import android.app.*
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -12,6 +10,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.location.Location
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -20,6 +19,8 @@ import android.text.TextUtils
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -62,6 +63,9 @@ class reportActivity : AppCompatActivity() {
     lateinit var firebaseStorage: FirebaseStorage
     private lateinit var db: FirebaseFirestore
 
+    private val CHANNEL_ID = "channel_id_example_01"
+    private val notificationID = 101
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +81,7 @@ class reportActivity : AppCompatActivity() {
         deadPatient = findViewById(R.id.dead)
 
         radiogroup_type = findViewById(R.id.radiogroup)
+        createNotificationChannel()
 
 
         mAuth = FirebaseAuth.getInstance()
@@ -90,6 +95,7 @@ class reportActivity : AppCompatActivity() {
         submit_button = findViewById(R.id.submitB)
         submit_button.setOnClickListener(){
             submitPic()
+            finish()
 
 
         }
@@ -186,8 +192,8 @@ class reportActivity : AppCompatActivity() {
                     if (uid != null) {
                         saveFirestore(detail,uid, acctype,injured,dead, date ,currentLatLong)
 
-
                     }
+
 
 
                 }
@@ -277,8 +283,28 @@ class reportActivity : AppCompatActivity() {
             }
         }
 
+    }
 
-
-
+    private fun createNotificationChannel(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            val name = "Incident Notification"
+            val descriptionText = "Notification Description"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID,name,importance).apply {
+                description=descriptionText
+            }
+            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+    private fun sendNotification(){
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("Incident near here")
+            .setContentText("incident description")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        with(NotificationManagerCompat.from(this)){
+            notify(notificationID,builder.build())
+        }
     }
 }
