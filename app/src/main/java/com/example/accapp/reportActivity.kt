@@ -89,18 +89,13 @@ class reportActivity : AppCompatActivity() {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
-
         firebaseStorage = FirebaseStorage.getInstance()
 
         submit_button = findViewById(R.id.submitB)
         submit_button.setOnClickListener(){
             submitPic()
             finish()
-
-
         }
-
-
     }
 
 
@@ -116,8 +111,6 @@ class reportActivity : AppCompatActivity() {
         user["dead"] = dead
         user["date"] = date
         user["Location"] = currentLatLng
-
-
 
         db.collection("Report").add(user).addOnSuccessListener {
             Toast.makeText(this, "added success", Toast.LENGTH_SHORT).show()
@@ -144,6 +137,8 @@ class reportActivity : AppCompatActivity() {
             val radioId = radiogroup_type.checkedRadioButtonId
             val injured = injuredPatient.text.toString()
             val dead = deadPatient.text.toString()
+            val user = mAuth.currentUser
+            val uid = user?.uid
 
 
             radioButton = findViewById(radioId)
@@ -158,7 +153,7 @@ class reportActivity : AppCompatActivity() {
 
 
 
-            var imageRef = FirebaseStorage.getInstance().reference.child("test/image/$fileName")
+            var imageRef = FirebaseStorage.getInstance().reference.child("test/image/$detail")
             imageRef.putFile(filepath)
                 .addOnSuccessListener {p0 ->
                     pd.dismiss()
@@ -174,8 +169,7 @@ class reportActivity : AppCompatActivity() {
 
 
 
-            val user = mAuth.currentUser
-            val uid = user?.uid
+
 
             if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -191,10 +185,7 @@ class reportActivity : AppCompatActivity() {
 
                     if (uid != null) {
                         saveFirestore(detail,uid, acctype,injured,dead, date ,currentLatLong)
-
                     }
-
-
 
                 }
             }

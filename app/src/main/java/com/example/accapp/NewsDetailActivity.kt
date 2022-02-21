@@ -10,6 +10,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 
 class NewsDetailActivity : AppCompatActivity() {
     lateinit var inputInjure: TextView
@@ -21,6 +22,7 @@ class NewsDetailActivity : AppCompatActivity() {
 
     private lateinit var db: FirebaseFirestore
     private lateinit var mAuth: FirebaseAuth
+    lateinit var firebaseStorage: FirebaseStorage
     companion object{
         private const val RC_SIGN_IN = 100
         const val TAG = "TEST_TAG"
@@ -37,9 +39,9 @@ class NewsDetailActivity : AppCompatActivity() {
         inputDate = findViewById(R.id.inputDate)
 
 
-
         db = FirebaseFirestore.getInstance()
         mAuth = FirebaseAuth.getInstance()
+        firebaseStorage = FirebaseStorage.getInstance()
 
         db.collection("Report").get().addOnSuccessListener{ result ->
             for (document in result) {
@@ -53,6 +55,6 @@ class NewsDetailActivity : AppCompatActivity() {
             }
 
 
-
         }
+
 }

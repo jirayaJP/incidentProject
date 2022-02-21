@@ -38,6 +38,8 @@ import com.google.android.gms.location.LocationCallback
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.maps.android.SphericalUtil
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener  {
@@ -48,7 +50,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     lateinit var mGps: ImageView
     private lateinit var db: FirebaseFirestore
     private lateinit var mAuth: FirebaseAuth
-    lateinit var locateArray: ArrayList<LatLng>
+    lateinit var locateArray: ArrayList<Any>
 
 
     private val mLocationPermissionsGranted = false
@@ -74,6 +76,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         db = FirebaseFirestore.getInstance()
         mAuth = FirebaseAuth.getInstance()
+        locateArray=ArrayList()
 
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
@@ -98,9 +101,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 val locate = document.data.getValue("Location")
 
                 val dateTime = document.data["date"]
-                Log.d(TAG, "${document.id} => $locate")
+                if (locate != null) {
+                    locateArray.add(locate)
+                }
 
             }
+            Log.d(TAG,"$locateArray")
         }
             .addOnFailureListener { exception ->
                 Log.d(TAG, "Error getting documents: ", exception)
@@ -141,7 +147,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 //Toast.makeText(this, "$currentLatLong", Toast.LENGTH_SHORT).show()
                 placeMarkerOnMap(currentLatLong)
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLong, 12f))
-                //Location.distanceBetween(location.latitude,location.longitude,results)
+
                 val distance = SphericalUtil.computeDistanceBetween(currentLatLong,newLatLng)
                 val distanceB = distance/1000
                 Toast.makeText(this, "$distanceB" , Toast.LENGTH_SHORT).show()
@@ -157,7 +163,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val markerOptions = MarkerOptions().position(currentLatLong)
         markerOptions.title("$currentLatLong")
         mMap.addMarker(markerOptions)
-
+        for(i in locateArray.indices) {
+            mMap.addMarker(MarkerOptions().position(locateArray[i] as LatLng))
+        }
     }
 
 
