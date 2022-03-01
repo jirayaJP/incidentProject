@@ -31,10 +31,12 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -112,6 +114,7 @@ class reportActivity : AppCompatActivity() {
         user["date"] = date
         user["Location"] = currentLatLng
 
+
         db.collection("Report").add(user).addOnSuccessListener {
             Toast.makeText(this, "added success", Toast.LENGTH_SHORT).show()
         }
@@ -130,7 +133,7 @@ class reportActivity : AppCompatActivity() {
             pd.setTitle("Uploading")
             pd.show()
 
-            val formatter = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault())
+            val formatter = SimpleDateFormat("yyyy_MM_dd", Locale.getDefault())
             val now = Date()
             val fileName = formatter.format(now)
             val detail = Describedetail.text.toString()
@@ -146,8 +149,9 @@ class reportActivity : AppCompatActivity() {
             val acctype = radioButton.text.toString()
 
             calendar = Calendar.getInstance()
-            simpleDateFormat = SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
+            simpleDateFormat = SimpleDateFormat("dd-MM-yyyy")
             val date: String = simpleDateFormat.format(calendar.time)
+            val timeStamp: FieldValue = FieldValue.serverTimestamp()
             mAuth = FirebaseAuth.getInstance()
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -188,6 +192,15 @@ class reportActivity : AppCompatActivity() {
                     }
 
                 }
+            }
+
+            val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("Incident near here")
+                .setContentText(detail)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            with(NotificationManagerCompat.from(this)){
+                notify(notificationID,builder.build())
             }
 
 
@@ -271,6 +284,7 @@ class reportActivity : AppCompatActivity() {
             submit_button.setOnClickListener(){
                 uploadvideo()
                 submitPic()
+
             }
         }
 

@@ -20,6 +20,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
+import java.sql.Timestamp
 
 
 data class Case(
@@ -45,7 +46,7 @@ class NewsActivity : AppCompatActivity(){
 
         db = FirebaseFirestore.getInstance()
         firebaseStorage = FirebaseStorage.getInstance()
-        val query = db.collection("Report").orderBy("date")
+        val query = db.collection("Report")
         val options = FirestoreRecyclerOptions.Builder<Case>().setQuery(query, Case::class.java).setLifecycleOwner(this).build()
         val adapter = object: FirestoreRecyclerAdapter<Case, UserViewHolder>(options){
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
@@ -65,7 +66,7 @@ class NewsActivity : AppCompatActivity(){
                 injuredTest.text = model.injured
                 deadTest.text = model.dead
                 accTest.text = model.acctype
-                val ref = firebaseStorage.reference.child("test/image/car acc 1 hurt")
+                val ref = firebaseStorage.reference.child("test/image/test")
                 val localFile = File.createTempFile("detail","jpg")
                 ref.getFile(localFile).addOnSuccessListener {
                     val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
