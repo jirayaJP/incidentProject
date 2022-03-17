@@ -1,13 +1,17 @@
 package com.example.accapp
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.ContentProviderClient
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.GnssAntennaInfo
 import android.location.Location
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.KeyEvent
@@ -34,10 +38,14 @@ import androidx.annotation.NonNull
 import com.google.android.gms.location.LocationRequest
 import android.os.Looper
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.maps.android.SphericalUtil
+import java.text.DecimalFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -51,8 +59,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var db: FirebaseFirestore
     private lateinit var mAuth: FirebaseAuth
     lateinit var locateArray: ArrayList<Any>
+    private var markerTest: Marker?=null
+    private var markerTest2: Marker?=null
+    private var markerTest3: Marker?=null
+    private var markerTest4: Marker?=null
 
-
+    private val CHANNEL_ID = "channel_id_example_01"
+    private val notificationID = 101
     private val mLocationPermissionsGranted = false
 
     private lateinit var lastLocation: Location
@@ -96,17 +109,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        db.collection("Report").get().addOnSuccessListener{ result ->
+        db.collection("Report").whereEqualTo("acctype", "รถชน").get().addOnSuccessListener{ result ->
             for (document in result) {
                 val locate = document.data.getValue("Location")
 
-                val dateTime = document.data["date"]
-                if (locate != null) {
-                    locateArray.add(locate)
-                }
+
+
 
             }
-            Log.d(TAG,"$locateArray")
+
         }
             .addOnFailureListener { exception ->
                 Log.d(TAG, "Error getting documents: ", exception)
@@ -120,6 +131,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.setOnMarkerClickListener(this)
+        createNotificationChannel()
         setUpMap()
 
 
@@ -143,14 +155,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             if (location != null){
                 lastLocation = location
                 val currentLatLong = LatLng(location.latitude,location.longitude)
-                val newLatLng = LatLng(13.8424882967, 100.567494397)
-                //Toast.makeText(this, "$currentLatLong", Toast.LENGTH_SHORT).show()
+                val newLatLng = LatLng(13.763683, 100.548529)
                 placeMarkerOnMap(currentLatLong)
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLong, 12f))
-
+                val df = DecimalFormat("#.###")
                 val distance = SphericalUtil.computeDistanceBetween(currentLatLong,newLatLng)
                 val distanceB = distance/1000
-                Toast.makeText(this, "$distanceB" , Toast.LENGTH_SHORT).show()
+                val roundoff = df.format(distanceB)
+                if(distanceB < 0.5){
+                    val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_launcher_foreground)
+                        .setContentTitle("Incident near here")
+                        .setContentText("$roundoff"+" km " + " ห่างจากจุดเสี่ยงอันตราย โปรดขับรถอย่างระมัดระวัง")
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    with(NotificationManagerCompat.from(this)){
+                        notify(notificationID,builder.build())
+                    }
+                }
 
 
             }
@@ -161,11 +182,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     private fun placeMarkerOnMap(currentLatLong: LatLng) {
         val markerOptions = MarkerOptions().position(currentLatLong)
-        markerOptions.title("$currentLatLong")
+        val newLatLng = LatLng(13.748957, 100.563425)
+        val newLatLng2 = LatLng(13.730016, 100.570331)
+        val newLatLng3 = LatLng(13.797378, 100.627192)
+        val newLatLng4 = LatLng(13.763683, 100.548529)
+        markerOptions.title("current position")
         mMap.addMarker(markerOptions)
-        for(i in locateArray.indices) {
-            mMap.addMarker(MarkerOptions().position(locateArray[i] as LatLng))
-        }
+        markerTest = mMap.addMarker(markerOptions.position(newLatLng).title("จุดเสี่ยงอันตราย").icon(
+            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)))
+        markerTest2 = mMap.addMarker(markerOptions.position(newLatLng2).title("จุดเสี่ยงอันตราย").icon(
+            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)))
+        markerTest3 = mMap.addMarker(markerOptions.position(newLatLng3).title("จุดเสี่ยงอันตราย").icon(
+            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)))
+        markerTest4 = mMap.addMarker(markerOptions.position(newLatLng4).title("จุดเสี่ยงอันตราย").icon(
+            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)))
     }
 
 
@@ -192,5 +222,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
 
     override fun onMarkerClick(p0: Marker) = false
+
+    private fun createNotificationChannel(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            val name = "Incident Notification"
+            val descriptionText = "Notification Description"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID,name,importance).apply {
+                description=descriptionText
+            }
+            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
 
 }

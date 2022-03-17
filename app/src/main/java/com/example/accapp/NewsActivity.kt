@@ -21,6 +21,8 @@ import com.google.firebase.firestore.*
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 data class Case(
@@ -37,6 +39,9 @@ class NewsActivity : AppCompatActivity(){
 
     private lateinit var db: FirebaseFirestore
     lateinit var firebaseStorage: FirebaseStorage
+    lateinit var calendar: Calendar
+    lateinit var simpleDateFormat: SimpleDateFormat
+    lateinit var date:String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,8 +50,12 @@ class NewsActivity : AppCompatActivity(){
         supportActionBar!!.title = "Traffic news"
 
         db = FirebaseFirestore.getInstance()
+
+        calendar = Calendar.getInstance()
+        simpleDateFormat = SimpleDateFormat("dd-MM-yyyy")
+        val date: String = simpleDateFormat.format(calendar.time)
         firebaseStorage = FirebaseStorage.getInstance()
-        val query = db.collection("Report")
+        val query = db.collection("Report").whereEqualTo("date",date )
         val options = FirestoreRecyclerOptions.Builder<Case>().setQuery(query, Case::class.java).setLifecycleOwner(this).build()
         val adapter = object: FirestoreRecyclerAdapter<Case, UserViewHolder>(options){
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {

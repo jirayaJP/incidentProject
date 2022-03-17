@@ -33,12 +33,16 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.perf.metrics.AddTrace
 
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.maps.android.SphericalUtil
 import java.sql.Timestamp
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.roundToInt
 
 class reportActivity : AppCompatActivity() {
     private var our_request_code : Int = 123
@@ -67,7 +71,6 @@ class reportActivity : AppCompatActivity() {
 
     private val CHANNEL_ID = "channel_id_example_01"
     private val notificationID = 101
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -172,9 +175,6 @@ class reportActivity : AppCompatActivity() {
                 }
 
 
-
-
-
             if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED){
@@ -186,21 +186,27 @@ class reportActivity : AppCompatActivity() {
                 if (location != null){
                     lastLocation = location
                     val currentLatLong = LatLng(location.latitude,location.longitude)
+                    val newLatLng = LatLng(13.763774, 100.548492)
+                    val distance = SphericalUtil.computeDistanceBetween(currentLatLong,newLatLng)
+                    val df = DecimalFormat("#.###")
+                    val distanceB = (distance/1000)
+                    val roundoff = df.format(distanceB)
+                    if(distanceB < 1){
+                        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+                            .setSmallIcon(R.drawable.ic_launcher_foreground)
+                            .setContentTitle("Incident near here")
+                            .setContentText(detail+" and "+roundoff.toString()+" km "+ " away from your current position")
+                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        with(NotificationManagerCompat.from(this)){
+                            notify(notificationID,builder.build())
+                        }
+                    }
 
                     if (uid != null) {
                         saveFirestore(detail,uid, acctype,injured,dead, date ,currentLatLong)
                     }
 
                 }
-            }
-
-            val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Incident near here")
-                .setContentText(detail)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            with(NotificationManagerCompat.from(this)){
-                notify(notificationID,builder.build())
             }
 
 
